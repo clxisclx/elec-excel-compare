@@ -1,0 +1,23 @@
+{
+  "name": "elec-excel-compare",
+  "version": "1.0.0",
+  "description": "compare mall order tradeRecord",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "abc12312312"
+  ],
+  "author": "clx",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^31.1.0",
+    "electron-reloader": "^1.2.3"
+  },
+  "dependencies": {
+    "lowdb": "^7.0.1",
+    "xlsx": "^0.18.5"
+  }
+}

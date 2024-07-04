@@ -1,0 +1,29 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Excel Preview</title>
+    <style>
+      #back-btn {
+        margin: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <button id="back-btn">返回首页</button>
+    <pre id="preview-output"></pre>
+    <script>
+      const backBtn = document.getElementById('back-btn');
+      const previewOutput = document.getElementById('preview-output');
+
+      backBtn.addEventListener('click', () => {
+        window.electron.goBack();
+      });
+
+      window.electron.getPreviewData((data) => {
+        previewOutput.textContent = JSON.stringify(data, null, 2);
+      });
+    </script>
+  </body>
+</html>
