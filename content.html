@@ -1,0 +1,98 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+
+      th,
+      td {
+        border: 1px solid black;
+        text-align: left;
+        padding: 8px;
+      }
+
+      th {
+        background-color: #f2f2f2;
+      }
+
+      td {
+        min-width: 100px;
+        word-wrap: break-word;
+      }
+
+      button {
+        width: 90px;
+        height: 30px;
+        margin: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <button id="back">返回</button>
+    <div id="data"></div>
+    <script>
+      const backBtn = document.getElementById('back');
+      backBtn.addEventListener('click', () => {
+        window.history.back();
+      });
+
+      // 页面加载时从localStorage获取数据
+      document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const param = urlParams.get('param'); // 获取参数 'param'
+        document.getElementsByTagName('title')[0].textContent = param;
+
+        let data = undefined;
+        if (param === 'SOURCE') {
+          data = localStorage.getItem('outputSource');
+        } else {
+          data = localStorage.getItem('outputCompare');
+        }
+        if (data) {
+          console.log('data:', data);
+          const dataArray = JSON.parse(data);
+          const table = createTable(dataArray);
+          document.getElementById('data').appendChild(table);
+        }
+      });
+
+      function createTable(dataArray) {
+        const table = document.createElement('table');
+        const thead = document.createElement('thead');
+        const tbody = document.createElement('tbody');
+
+        // 表头
+        if (dataArray.length > 0) {
+          const tr = document.createElement('tr');
+          Object.keys(dataArray[0]).forEach((key) => {
+            const th = document.createElement('th');
+            th.textContent = key;
+            tr.appendChild(th);
+          });
+          thead.append(tr);
+        }
+
+        // 填充数据
+        dataArray.forEach((item) => {
+          const tr = document.createElement('tr');
+          Object.values(item).forEach((value) => {
+            const td = document.createElement('td');
+            td.textContent = value;
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+
+        table.appendChild(thead);
+        table.appendChild(tbody);
+        return table;
+      }
+    </script>
+  </body>
+</html>

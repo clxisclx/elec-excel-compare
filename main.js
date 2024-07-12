@@ -8,19 +8,19 @@ let previewData;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1800,
+    height: 1600,
     minWidth: 800,
     minHeight: 600,
-    maxWidth: 800,
-    maxHeight: 600,
+    maxWidth: 1800,
+    maxHeight: 1600,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
 
   mainWindow.loadFile('index.html');
-  //   mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
 }
 
 app.whenReady().then(() => {
@@ -31,6 +31,10 @@ app.whenReady().then(() => {
       createWindow();
     }
   });
+});
+
+app.on('before-quit', () => {
+  mainWindow.webContents.session.clearStorageData(['localStorage']);
 });
 
 app.on('window-all-closed', () => {
@@ -57,16 +61,15 @@ ipcMain.handle('read-excel', async (event, filePath) => {
 
 let targetList = [];
 ipcMain.on('export-excel', async (event, source, compare) => {
-  source.forEach(
-    (item) => (item['商城订单交易编号1'] = item['商城订单交易编号1'].trim())
-  );
+  // 去除首尾特殊字符
+  source.forEach((item) => (item['商城订单交易编号1'] = item['商城订单交易编号1'].trim()));
   compare.forEach((item) => (item['商城订单号'] = item['商城订单号'].trim()));
 
+  // 生成比较map
   const compareMap = compare.reduce((acc, item) => {
     acc[item['商城订单号']] = item;
     return acc;
   }, {});
-  //   console.log('compareMap:', compareMap);
 
   for (const item of source) {
     if (!item['商城订单平台']) continue;
@@ -80,19 +83,8 @@ ipcMain.on('export-excel', async (event, source, compare) => {
     if (matchedItem) {
       target['商城订单号'] = matchedItem['商城订单号'];
       target['商城分佣(元)'] = matchedItem['商城分佣'];
-      target['合伙人实际分佣(厘)'] = Math.floor(
-        matchedItem['商城分佣'] * 1000 * 0.95
-      );
-      target['是否匹配'] =
-        target['合伙人实际分佣(厘)'] - target['分佣金额(厘)'] <= 10
-          ? '是'
-          : '否';
-      //   console.log(
-      //     '分佣:${},计算后:${},后台分佣:${}',
-      //     matchedItem['商城分佣'],
-      //     target['合伙人实际分佣(厘)'],
-      //     target['分佣金额(厘)']
-      //   );
+      target['合伙人实际分佣(厘)'] = Math.floor(matchedItem['商城分佣'] * 1000 * 0.95);
+      target['是否匹配'] = target['合伙人实际分佣(厘)'] - target['分佣金额(厘)'] <= 10 ? '是' : '否';
       target['理由'] = target['是否匹配'] === '是' ? '' : '金额不匹配';
     } else {
       target['是否匹配'] = '否';
@@ -100,10 +92,15 @@ ipcMain.on('export-excel', async (event, source, compare) => {
     }
     targetList.push(target);
   }
-  console.log('target:', targetList);
+
+  const day = new Date();
+  const title = `比较结果_${day.getFullYear()}-${
+    day.getMonth() + 1
+  }-${day.getDate()} ${day.getHours()}:${day.getMinutes()}:${day.getSeconds()}.xlsx`;
+
   const savePath = dialog.showSaveDialogSync({
-    title: 'Save First Column',
-    defaultPath: '11111first_column.xlsx',
+    title: title,
+    defaultPath: title,
     filters: [{ name: 'Excel Files', extensions: ['xlsx'] }],
   });
   if (savePath) {
@@ -112,10 +109,4 @@ ipcMain.on('export-excel', async (event, source, compare) => {
     xlsx.utils.book_append_sheet(newWorkbook, newWorksheet, 'Sheet1');
     xlsx.writeFile(newWorkbook, savePath);
   }
-});
-
-ipcMain.on('reset', async (event) => {
-  console.log('reset');
-  targetList = [];
-  console.log('target:', targetList);
 });

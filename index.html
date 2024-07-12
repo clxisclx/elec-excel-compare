@@ -54,7 +54,8 @@
     <div class="container">
       <div class="zone">
         <div id="drop-zone-source" class="drop-zone">拖动账单文件到这里</div>
-        <pre id="output-source"></pre>
+        <pre id="output-source-path"></pre>
+        <button class="btn" id="source-preview-btn">预览</button>
       </div>
       <div class="btn-container">
         <button class="btn" id="export-btn">导出</button>
@@ -62,67 +63,100 @@
       </div>
       <div class="zone">
         <div id="drop-zone-compare" class="drop-zone">拖动比较文件到这里</div>
-        <pre id="output-compare"></pre>
+        <pre id="output-compare-path"></pre>
+        <button class="btn" id="compare-preview-btn">预览</button>
       </div>
     </div>
     <script>
-      // source
+      // source文件拖动区域
       const dropZoneSource = document.getElementById('drop-zone-source');
-      const outputSource = document.getElementById('output-source');
-      let sheetDataSource = null;
+      // source文件路径显示
+      const outputSourcePath = document.getElementById('output-source-path');
+      // source文件内容
+      let sourceData = JSON.parse(localStorage.getItem('outputSource'));
+      // souce文件路径
+      let sourcePath = localStorage.getItem('outputSourcePath');
+      outputSourcePath.textContent = sourcePath;
 
+      // source拖拽逻辑
       dropZoneSource.addEventListener('dragover', (event) => {
         event.preventDefault();
       });
-
       dropZoneSource.addEventListener('drop', async (event) => {
         event.preventDefault();
         const files = event.dataTransfer.files;
         if (files.length > 0) {
           const filePath = files[0].path;
           read = await window.electron.readExcel(filePath);
-          sheetDataSource = read.data;
-          outputSource.textContent = JSON.stringify(read.filePath, null, 2);
+          localStorage.setItem('outputSource', JSON.stringify(read.data));
+          localStorage.setItem('outputSourcePath', JSON.stringify(read.filePath, null, 2));
+
+          sourceData = JSON.parse(localStorage.getItem('outputSource'));
+          outputSourcePath.textContent = localStorage.getItem('outputSourcePath');
         }
       });
 
-      // compare
+      // compare文件拖动区域
       const dropZoneCompare = document.getElementById('drop-zone-compare');
-      const outputCompare = document.getElementById('output-compare');
-      let sheetDataCompare = null;
+      // compare文件路径显示
+      const outputComparePath = document.getElementById('output-compare-path');
+      // compare文件内容
+      let compareData = JSON.parse(localStorage.getItem('outputCompare'));
+      // compare文件路径
+      let comparePath = localStorage.getItem('outputComparePath');
+      outputComparePath.textContent = comparePath;
 
       dropZoneCompare.addEventListener('dragover', (event) => {
         event.preventDefault();
       });
-
       dropZoneCompare.addEventListener('drop', async (event) => {
         event.preventDefault();
         const files = event.dataTransfer.files;
         if (files.length > 0) {
           const filePath = files[0].path;
           read = await window.electron.readExcel(filePath);
-          sheetDataCompare = read.data;
-          outputCompare.textContent = JSON.stringify(read.filePath, null, 2);
+          compareData = read.data;
+          localStorage.setItem('outputCompare', JSON.stringify(read.data));
+          localStorage.setItem('outputComparePath', JSON.stringify(read.filePath, null, 2));
+
+          compareData = JSON.parse(localStorage.getItem('outputCompare'));
+          outputComparePath.textContent = localStorage.getItem('outputComparePath');
         }
       });
 
-      // btn
+      // export
       const exportBtn = document.getElementById('export-btn');
       exportBtn.addEventListener('click', () => {
-        if (!sheetDataSource) alert('没有账单数据');
-        if (!sheetDataCompare) alert('没有商城数据');
-        console.log('click', sheetDataSource, sheetDataCompare);
-        window.electron.exportExcel(sheetDataSource, sheetDataCompare);
+        if (!sourceData) {
+          alert('没有账单数据');
+          return;
+        }
+        if (!compareData) {
+          alert('没有商城数据');
+          return;
+        }
+        window.electron.exportExcel(sourceData, compareData);
       });
 
       // reset
       const resetBtn = document.getElementById('reset-btn');
       resetBtn.addEventListener('click', () => {
-        outputSource.textContent = null;
-        outputCompare.textContent = null;
-        sheetDataSource = null;
-        sheetDataCompare = null;
-        window.electron.reset();
+        outputSourcePath.textContent = null;
+        outputComparePath.textContent = null;
+        sourceData = null;
+        compareData = null;
+
+        localStorage.clear();
+      });
+
+      // 预览
+      const sourcePreviewBtn = document.getElementById('source-preview-btn');
+      sourcePreviewBtn.addEventListener('click', () => {
+        location.href = `content.html?param=SOURCE`;
+      });
+      const comparePreviewBtn = document.getElementById('compare-preview-btn');
+      comparePreviewBtn.addEventListener('click', () => {
+        location.href = `content.html?param=COMPARE`;
       });
     </script>
   </body>

@@ -5,7 +5,4 @@ contextBridge.exposeInMainWorld('electron', {
   exportExcel: (source, compare) => {
     ipcRenderer.send('export-excel', source, compare);
   },
-  reset: () => {
-    ipcRenderer.send('reset');
-  },
 });
